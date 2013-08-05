@@ -171,8 +171,8 @@ int main(int argc, char* argv[])
       ( "help,h", "Show detailed help." )
       ( "options,p", "Show parameter information." )
       ( "version,p", "Show version information." )
-      ( "input-file,i", po::value<std::vector<std::string>>(), "Define file(s) for the convertion input." )
-      ( "input-type,I", po::value<std::vector<std::string>>(), "Define file type(s) for automatic conversion of files in the working directory." )
+      ( "input-file,i", po::value<std::vector<std::string> >(), "Define file(s) for the convertion input." )
+      ( "input-type,I", po::value<std::vector<std::string> >(), "Define file type(s) for automatic conversion of files in the working directory." )
       ( "output-file,o", po::value<std::string>(), "Define file for the convertion output." )
       ( "noheader,h", "Disable adding of header support defines." )
       ( "const,C", "Define array as const." )
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
         /* Process input files based on provided list */
         if ( opt.count( "input-file" ) )
         {
-          std::vector<std::string> files( opt[ "input-file" ].as<std::vector<std::string>>() );
+          std::vector<std::string> files( opt[ "input-file" ].as<std::vector<std::string> >() );
 
           BOOST_FOREACH( std::string& file, files )
           {
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
         /* Process input files based on provided type */
         if ( opt.count( "input-type" ) )
         {
-          std::vector<std::string> types( opt[ "input-type" ].as<std::vector<std::string>>() );
+          std::vector<std::string> types( opt[ "input-type" ].as<std::vector<std::string> >() );
 
           for ( fs::directory_iterator dir_itr( fs::initial_path() ); dir_itr != fs::directory_iterator(); ++dir_itr )
           {
