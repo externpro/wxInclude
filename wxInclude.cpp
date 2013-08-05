@@ -3,7 +3,14 @@
   Kim De Deyn
 */
 
-#include "stdafx.h"
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/foreach.hpp>
+#include <boost/format.hpp>
+#include <boost/program_options.hpp>
+#include <boost/timer.hpp>
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
