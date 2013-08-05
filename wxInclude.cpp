@@ -29,7 +29,9 @@ namespace fs = boost::filesystem;
   "Example of use:\n\n" \
   "  wxInclude.exe --const --input-file=mydata1.bin\n" \
   "    --input-type=.png --input-type=.bmp\n" \
-  "    --output-file=myheader.h mydata2.bin myimage.png\n"
+  "    --output-file=myheader.h mydata2.bin myimage.png\n\n" \
+  "**Recommended usage:**\n" \
+  "  wxInclude --const --appendtype --wxnone --output-file=foo.hrc foo.png\n"
 
 #define WXINCLUDE_VERSION "Version 1.0, compiled on " __DATE__ " at " __TIME__
 
