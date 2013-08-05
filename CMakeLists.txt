@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.10)
 project(wxInclude)
 include(flags OPTIONAL)
 set(externpro ${CMAKE_INSTALL_PREFIX})
-####################
+########################################
 # find boost
 # see FindBoost.cmake for details on the following variables
 set(BOOST_ROOT ${externpro})
@@ -33,7 +33,7 @@ if(MSVC)
   # NOTE: use automatic linking of boost libraries with MSVC
   find_package(Boost ${BOOST_VER} REQUIRED)
   link_directories(${externpro}/lib${NUMBITS})
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS) # wxInclude.cpp calls sprintf
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS) # wxInclude.cpp calls snprintf
 else()
   find_package(Boost ${BOOST_VER} REQUIRED COMPONENTS
     filesystem
@@ -42,6 +42,7 @@ else()
     )
 endif()
 include_directories(${Boost_INCLUDE_DIRS})
+########################################
 add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME} ${Boost_LIBRARIES})
 install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION bin${NUMBITS})
