@@ -33,7 +33,7 @@ namespace fs = boost::filesystem;
   "**Recommended usage:**\n" \
   "  wxInclude --const --appendtype --wxnone --output-file=foo.hrc foo.png\n"
 
-#define WXINCLUDE_VERSION "Version 1.0, compiled on " __DATE__ " at " __TIME__
+#define WXINCLUDE_VERSION "Version 1.1, compiled on " __DATE__ " at " __TIME__
 
 #define BUFFER_SIZE 4096
 
