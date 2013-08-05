@@ -15,6 +15,10 @@
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 #define WXINCLUDE_INFO	"wxInclude by Kim De Deyn, use --help for more information.\n"
 
 #define WXINCLUDE_HELP	"This tool can be used to convert binary files into a useful C/C++ header.\n" \
@@ -27,7 +31,7 @@ namespace fs = boost::filesystem;
   "    --input-type=.png --input-type=.bmp\n" \
   "    --output-file=myheader.h mydata2.bin myimage.png\n"
 
-#define WXINCLUDE_VERSION "Version 1.0, compiled at " __DATE__ " " __TIME__
+#define WXINCLUDE_VERSION "Version 1.0, compiled on " __DATE__ " at " __TIME__
 
 #define BUFFER_SIZE 4096
 
@@ -106,7 +110,7 @@ void definefile( std::ostringstream& data, fs::ifstream& input, std::string& nam
   /* Define array */
   data << "static" << ( useconst ? " const " : " " ) << "unsigned char " << name << "[] = {" << std::endl;
 
-  int size = input.tellg();
+  int size = static_cast<int>(input.tellg()); // conversion from std::streamoff to int, possible loss of data
   input.seekg( 0, std::ios::beg );
 
   int c = 0;
@@ -130,7 +134,7 @@ void definefile( std::ostringstream& data, fs::ifstream& input, std::string& nam
       Still faster then the optimized boost::format use, but not that much!
     */
     static char temp[5];
-    _snprintf( temp, 5, "0x%02X", c );
+    snprintf( temp, 5, "0x%02X", c );
     data << temp;
 
     if ( i >= size )
@@ -156,7 +160,7 @@ void definefile( std::ostringstream& data, fs::ifstream& input, std::string& nam
   data << "};" << std::endl << std::endl;
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
   try
   {
@@ -174,7 +178,6 @@ int _tmain(int argc, _TCHAR* argv[])
       ( "wxnone,w", "Disable adding of wxWidgets support macro's." )
       ( "wxheader,W", po::value<std::string>()->default_value( "wx/wx.h" ), "Select the header that includes wxWidgets (precompiled header?)." )
       ( "appendtype,t", "Add the file type at the end of the identifier (myimage_png)." )
-                        ( "text,T", "Disable binary output and use text output, converts feed codes to systems defaults." )
     ;
 
     po::positional_options_description posdesc;
@@ -182,7 +185,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
     po::variables_map opt;
     po::store( po::command_line_parser( argc, argv ).options( desc ).positional( posdesc ).run(), opt );
-    po::store( po::parse_config_file( fs::ifstream( fs::path( "default.cfg" ) ), desc ), opt );
+    fs::ifstream ifs(fs::path("default.cfg"));
+    po::store( po::parse_config_file( ifs, desc ), opt );
     po::notify( opt );
 
     std::cout << WXINCLUDE_INFO << std::endl;
@@ -221,14 +225,11 @@ int _tmain(int argc, _TCHAR* argv[])
         std::string headername( opt[ "output-file" ].as<std::string>() );
 
         fs::path outputpath( headername );
-        fs::ofstream output( outputpath, std::ios::out | std::ios::trunc );
+        fs::ofstream output( outputpath, std::ios::out | std::ios::trunc | std::ios::binary );
 
         /* Use buffer */
         char outbuffer[BUFFER_SIZE];
         output.rdbuf()->pubsetbuf( outbuffer, BUFFER_SIZE );
-
-                                if ( !opt.count( "text" ) )
-                                        output.setf( std::ios::binary );
 
         if ( !output )
           throw std::runtime_error( "Failed to create output file!" );
@@ -332,7 +333,7 @@ int _tmain(int argc, _TCHAR* argv[])
                   fs::ifstream input( dir_itr->path(), std::ios::in | std::ios::binary | std::ios::ate );
                   input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
 
-                  std::string file( dir_itr->path().leaf() );
+                  std::string file( dir_itr->path().leaf().string() );
 
                   if ( input.is_open() )
                   {
