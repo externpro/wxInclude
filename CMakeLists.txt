@@ -7,6 +7,7 @@ set(externpro ${CMAKE_INSTALL_PREFIX})
 # see FindBoost.cmake for details on the following variables
 set(BOOST_ROOT ${externpro})
 set(BOOST_LIBRARYDIR ${externpro}/lib${NUMBITS})
+set(Boost_NO_BOOST_CMAKE TRUE)
 set(Boost_NO_SYSTEM_PATHS TRUE)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ON)
