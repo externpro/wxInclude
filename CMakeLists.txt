@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.10)
+cmake_minimum_required(VERSION 3.0)
 project(wxInclude)
 include(flags OPTIONAL)
 set(externpro ${CMAKE_INSTALL_PREFIX})
@@ -14,12 +14,12 @@ set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
 # TODO: remove the following conditional (setting Boost_COMPILER)
 #       once FindBoost.cmake detects clang
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   exec_program(${CMAKE_CXX_COMPILER}
     ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
     OUTPUT_VARIABLE CLANG_VERSION
     )
-  string(REGEX REPLACE "([0-9])\\.([0-9])(\\.[0-9])?" "\\1\\2"
+  string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?" "\\1.\\2"
     CLANG_VERSION ${CLANG_VERSION}
     )
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
