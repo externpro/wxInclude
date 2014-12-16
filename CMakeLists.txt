@@ -19,7 +19,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
     OUTPUT_VARIABLE CLANG_VERSION
     )
-  string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?" "\\1.\\2"
+  string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?" "\\1\\2"
     CLANG_VERSION ${CLANG_VERSION}
     )
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
