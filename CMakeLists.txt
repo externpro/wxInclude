@@ -12,6 +12,8 @@ set(Boost_NO_SYSTEM_PATHS TRUE)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_STATIC_RUNTIME ON)
+#set(Boost_DEBUG TRUE) # enable debugging output of FindBoost.cmake
+#set(Boost_DETAILED_FAILURE_MSG TRUE) # output detailed information
 # TODO: remove the following conditional (setting Boost_COMPILER)
 #       once FindBoost.cmake detects clang
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
