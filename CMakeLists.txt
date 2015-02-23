@@ -51,4 +51,10 @@ include_directories(${Boost_INCLUDE_DIRS})
 ########################################
 add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME} ${Boost_LIBRARIES})
-install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION bin${NUMBITS})
+install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets
+  RUNTIME DESTINATION bin${NUMBITS}
+  LIBRARY DESTINATION lib${NUMBITS}
+  ARCHIVE DESTINATION lib${NUMBITS}
+  )
+install(FILES usexp-${PROJECT_NAME}-config.cmake DESTINATION share/cmake)
+install(EXPORT ${PROJECT_NAME}-targets DESTINATION bin${NUMBITS}/cmake)
