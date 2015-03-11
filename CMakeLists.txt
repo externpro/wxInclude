@@ -17,17 +17,20 @@ set(Boost_USE_STATIC_RUNTIME ON)
 # TODO: remove the following conditional (setting Boost_COMPILER)
 #       once FindBoost.cmake detects clang
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-  exec_program(${CMAKE_CXX_COMPILER}
-    ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
-    OUTPUT_VARIABLE CLANG_VERSION
-    )
-  string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?" "\\1\\2"
-    CLANG_VERSION ${CLANG_VERSION}
-    )
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(Boost_COMPILER -clang-darwin${CLANG_VERSION})
+    exec_program(${CMAKE_CXX_COMPILER}
+      ARGS ${CMAKE_CXX_COMPILER_ARG1} -dumpversion
+      OUTPUT_VARIABLE CLANG_VERSION
+      )
+    string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?"
+      "-clang-darwin\\1\\2"
+      Boost_COMPILER ${CLANG_VERSION}
+      )
   else()
-    set(Boost_COMPILER -clang${CLANG_VERSION})
+    string(REGEX REPLACE "([0-9]+)\\.([0-9]+)(\\.[0-9]+)?"
+      "-clang\\1\\2"
+      Boost_COMPILER ${CMAKE_CXX_COMPILER_VERSION}
+      )
   endif()
 endif()
 if(DEFINED BOOST_VER)
