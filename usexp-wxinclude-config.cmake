@@ -1,6 +1,6 @@
-# WXINCLUDE_FOUND - wxInclude was found
-# WXINCLUDE_EXE - the wxInclude executable
-set(prj wxInclude)
+# WXINCLUDE_FOUND - wxinclude was found
+# WXINCLUDE_EXE - the wxinclude executable
+set(prj wxinclude)
 # this file (-config) installed to share/cmake (see top-level CMakeLists.txt)
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 get_filename_component(XP_ROOTDIR "${SELF_DIR}/../.." ABSOLUTE)
