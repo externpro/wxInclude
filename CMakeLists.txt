@@ -60,5 +60,4 @@ install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${prj}-targets
   LIBRARY DESTINATION lib${NUMBITS}
   ARCHIVE DESTINATION lib${NUMBITS}
   )
-install(FILES usexp-${prj}-config.cmake DESTINATION share/cmake)
 install(EXPORT ${prj}-targets DESTINATION bin${NUMBITS}/cmake)
