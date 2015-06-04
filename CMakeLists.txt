@@ -6,7 +6,7 @@ set(externpro ${CMAKE_INSTALL_PREFIX})
 # find boost
 # see FindBoost.cmake for details on the following variables
 set(BOOST_ROOT ${externpro})
-set(BOOST_LIBRARYDIR ${externpro}/lib${NUMBITS})
+set(BOOST_LIBRARYDIR ${externpro}/lib)
 set(Boost_NO_BOOST_CMAKE TRUE)
 set(Boost_NO_SYSTEM_PATHS TRUE)
 set(Boost_USE_MULTITHREADED ON)
@@ -41,7 +41,7 @@ endif()
 if(MSVC)
   # NOTE: use automatic linking of boost libraries with MSVC
   find_package(Boost ${BOOST_VER} REQUIRED)
-  link_directories(${externpro}/lib${NUMBITS})
+  link_directories(${externpro}/lib)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS) # wxInclude.cpp calls snprintf
 else()
   find_package(Boost ${BOOST_VER} REQUIRED COMPONENTS
@@ -56,8 +56,8 @@ add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME} ${Boost_LIBRARIES})
 string(TOLOWER ${PROJECT_NAME} prj)
 install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${prj}-targets
-  RUNTIME DESTINATION bin${NUMBITS}
-  LIBRARY DESTINATION lib${NUMBITS}
-  ARCHIVE DESTINATION lib${NUMBITS}
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
   )
-install(EXPORT ${prj}-targets DESTINATION bin${NUMBITS}/cmake)
+install(EXPORT ${prj}-targets DESTINATION bin/cmake)
