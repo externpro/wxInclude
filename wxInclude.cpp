@@ -31,9 +31,9 @@ namespace fs = boost::filesystem;
   "    --input-type=.png --input-type=.bmp\n" \
   "    --output-file=myheader.h mydata2.bin myimage.png\n\n" \
   "Recommended usage (at Space Dynamics Lab):\n" \
-  "  wxInclude --const --appendtype --wxnone --output-file=foo.hrc foo.png\n"
+  "  wxInclude --const --appendtype --wxnone --respectcase --output-file=foo.hrc foo.png\n"
 
-#define WXINCLUDE_VERSION "Version 1.1, compiled on " __DATE__ " at " __TIME__
+#define WXINCLUDE_VERSION "Version 1.2, compiled on " __DATE__ " at " __TIME__
 
 #define BUFFER_SIZE 4096
 
@@ -170,7 +170,8 @@ int main(int argc, char* argv[])
     desc.add_options()
       ( "help,h", "Show detailed help." )
       ( "options,p", "Show parameter information." )
-      ( "version,p", "Show version information." )
+      ( "version,v", "Show version information." )
+      ( "quiet,q", "Quiet at runtime, not verbose." )
       ( "input-file,i", po::value<std::vector<std::string> >(), "Define file(s) for the convertion input." )
       ( "input-type,I", po::value<std::vector<std::string> >(), "Define file type(s) for automatic conversion of files in the working directory." )
       ( "output-file,o", po::value<std::string>(), "Define file for the convertion output." )
@@ -191,7 +192,8 @@ int main(int argc, char* argv[])
     po::store( po::parse_config_file( ifs, desc ), opt );
     po::notify( opt );
 
-    std::cout << WXINCLUDE_INFO << std::endl;
+    if ( !opt.count( "quiet" ) )
+      std::cout << WXINCLUDE_INFO << std::endl;
 
     /* Show options when requested */
     if ( opt.count( "options" ) )
@@ -236,8 +238,8 @@ int main(int argc, char* argv[])
         if ( !output )
           throw std::runtime_error( "Failed to create output file!" );
 
-        /* Show status */
-        std::cout << "Build  : file '" << outputpath.leaf() << "'..." << std::endl;
+        if ( !opt.count( "quiet" ) ) /* Show status */
+          std::cout << "Build  : file '" << outputpath.leaf() << "'..." << std::endl;
 
         /* Get base name of file */
         headername = fs::basename( outputpath );
@@ -274,8 +276,8 @@ int main(int argc, char* argv[])
 
             if ( input.is_open() )
             {
-              /* Show status */
-              std::cout << "Process: file '" << file << "'..." << std::endl;
+              if ( !opt.count( "quiet" ) ) /* Show status */
+                std::cout << "Process: file '" << file << "'..." << std::endl;
 
               /* Remove extension */
               boost::erase_last( file, fileext );
@@ -339,8 +341,8 @@ int main(int argc, char* argv[])
 
                   if ( input.is_open() )
                   {
-                    /* Show status */
-                    std::cout << "Process: file '" << file << "'..." << std::endl;
+                    if ( !opt.count( "quiet" ) ) /* Show status */
+                      std::cout << "Process: file '" << file << "'..." << std::endl;
 
                     /* Remove extension */
                     boost::erase_last( file, fileext );
@@ -381,8 +383,8 @@ int main(int argc, char* argv[])
         output.seekp( 0, std::ios::beg );
         output << data.str();
 
-        /* Show status */
-        std::cout << "Build  : " << timer.elapsed() << "s needed for conversion of " << list.size() << " files." << std::endl;
+        if ( !opt.count( "quiet" ) ) /* Show status */
+          std::cout << "Build  : " << timer.elapsed() << "s needed for conversion of " << list.size() << " files." << std::endl;
       }
       else
       {
