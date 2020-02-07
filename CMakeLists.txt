@@ -1,15 +1,17 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.12)
 project(wxInclude)
 include(flags)
 set(XP_MODULE_PATH ${CMAKE_MODULE_PATH})
-set(Boost_LIBS filesystem program_options system)
-xpFindPkg(PKGS boost) # needed for MSW for link_directories()
+xpFindPkg(PKGS boost)
 add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
-xpTargetExtern(${CMAKE_PROJECT_NAME} PRIVATE boost)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options)
 string(TOLOWER ${PROJECT_NAME} prj)
 install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${prj}-targets
   RUNTIME DESTINATION bin
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   )
-install(EXPORT ${prj}-targets DESTINATION bin/cmake)
+if(DEFINED XP_NAMESPACE)
+  set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
+endif()
+install(EXPORT ${prj}-targets DESTINATION bin/cmake ${nameSpace})
