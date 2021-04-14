@@ -4,7 +4,7 @@ include(flags)
 set(XP_MODULE_PATH ${CMAKE_MODULE_PATH})
 xpFindPkg(PKGS boost)
 add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options Boost::timer)
 string(TOLOWER ${PROJECT_NAME} prj)
 install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${prj}-targets
   RUNTIME DESTINATION bin

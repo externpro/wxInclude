@@ -5,12 +5,13 @@
 
 #include <iostream>
 #include <boost/algorithm/string.hpp>
+#include <boost/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
-#include <boost/timer.hpp>
+#include <boost/timer/timer.hpp>
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
@@ -223,7 +224,7 @@ int main(int argc, char* argv[])
       if ( opt.count( "output-file" ) )
       {
         /* Create timer */
-        boost::timer timer;
+        boost::timer::cpu_timer timer;
 
         /* Create output file */
         std::string headername( opt[ "output-file" ].as<std::string>() );
@@ -384,7 +385,11 @@ int main(int argc, char* argv[])
         output << data.str();
 
         if ( !opt.count( "quiet" ) ) /* Show status */
-          std::cout << "Build  : " << timer.elapsed() << "s needed for conversion of " << list.size() << " files." << std::endl;
+        {
+          auto nanoseconds = boost::chrono::nanoseconds(timer.elapsed().user + timer.elapsed().system);
+          auto seconds = boost::chrono::duration_cast<boost::chrono::seconds>(nanoseconds);
+          std::cout << "Build  : " << seconds.count() << "s needed for conversion of " << list.size() << " files." << std::endl;
+        }
       }
       else
       {
