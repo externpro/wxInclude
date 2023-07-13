@@ -1,0 +1,12 @@
+{
+    "name": "wxinclude",
+    "version": "1.3",
+    "dependencies": [
+        "boost-algorithm",
+        "boost-format",
+        "boost-iostreams",
+        "boost-program-options",
+        "boost-timer"
+    ],
+    "builtin-baseline": "64adda19c86e89526b5e27703a193c14477cce07"
+  }

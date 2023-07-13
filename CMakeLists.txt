@@ -1,23 +1,49 @@
 cmake_minimum_required(VERSION 3.20)
+
 project(wxInclude)
-include(GNUInstallDirs)
-include(flags)
-set(XP_MODULE_PATH ${CMAKE_MODULE_PATH})
-xpFindPkg(PKGS boost)
-add_executable(${CMAKE_PROJECT_NAME} wxInclude.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options Boost::timer)
-string(TOLOWER ${PROJECT_NAME} prj)
-install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${prj}-targets
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
-if(DEFINED XP_NAMESPACE)
-  set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
-endif()
-if(NOT DEFINED XP_INSTALL_CMAKEDIR)
-  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
-endif()
-install(EXPORT ${prj}-targets DESTINATION ${XP_INSTALL_CMAKEDIR} ${nameSpace})
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# -----------------------------
+# Build wxInclude
+# -----------------------------
+
+find_package(Boost COMPONENTS program_options timer REQUIRED)
+
+add_executable(wxInclude wxInclude.cpp)
+
+target_include_directories(wxInclude PRIVATE
+                           ${Boost_INCLUDE_DIRS}
+)
+
+target_link_libraries(wxInclude PRIVATE
+                      Boost::boost
+                      Boost::program_options
+                      Boost::timer
+)
+
+install(TARGETS wxInclude DESTINATION bin)
+
+# -----------------------------
+# Build decompressor
+# -----------------------------
+
+find_package(Boost COMPONENTS iostreams REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(ZLIB REQUIRED)
+
 add_executable(decompressor decompress.cpp)
-target_link_libraries(decompressor PRIVATE Boost::filesystem Boost::iostreams)
+
+target_include_directories(decompressor PRIVATE
+                           ${Boost_INCLUDE_DIRS}
+)
+
+target_link_libraries(decompressor PRIVATE
+                      Boost::boost
+                      Boost::iostreams
+                      BZip2::BZip2
+                      ZLIB::ZLIB
+)
+
+install(TARGETS decompressor DESTINATION bin)

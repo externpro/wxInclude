@@ -3,22 +3,19 @@
   Kim De Deyn
 */
 
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <set>
+
 #include <boost/algorithm/string.hpp>
-#include <boost/chrono.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <boost/timer/timer.hpp>
 
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
-
-#ifdef _MSC_VER
-#define snprintf _snprintf
-#endif
+namespace fs = std::filesystem;
 
 #define WXINCLUDE_INFO	"wxInclude by Kim De Deyn, use --help for more information.\n"
 
@@ -34,7 +31,7 @@ namespace fs = boost::filesystem;
   "Recommended usage (at Space Dynamics Lab):\n" \
   "  wxInclude --const --appendtype --wxnone --respectcase --output-file=foo.hrc foo.png\n"
 
-#define WXINCLUDE_VERSION "Version 1.2, compiled on " __DATE__ " at " __TIME__
+#define WXINCLUDE_VERSION "Version 1.3, compiled on " __DATE__ " at " __TIME__
 
 #define BUFFER_SIZE 4096
 
@@ -42,7 +39,7 @@ void defineheader_start( std::ostringstream& data, std::string& headername, bool
 {
   /* Write info header */
   data << "/*" << std::endl;
-  data << "  Automatic generated header by:" << std::endl << std::endl;
+  data << "  Automatically generated header by:" << std::endl << std::endl;
   data << "    " << WXINCLUDE_INFO;
   data << "    " << WXINCLUDE_VERSION << std::endl << std::endl;
   data << "  Header: " << headername << std::endl;
@@ -53,8 +50,8 @@ void defineheader_start( std::ostringstream& data, std::string& headername, bool
   /* Prevent multiple defines */
   std::string temp( headername );
   boost::to_upper( temp );
-  data << "#ifndef _WXINCLUDE_" << temp << "_H_" << std::endl;
-  data << "#define _WXINCLUDE_" << temp << "_H_" << std::endl << std::endl;
+  data << "#ifndef WXINCLUDE_" << temp << "_H" << std::endl;
+  data << "#define WXINCLUDE_" << temp << "_H" << std::endl << std::endl;
 }
 
 void defineheader_end( std::ostringstream& data, std::string& name )
@@ -80,22 +77,22 @@ void definemacros( std::ostringstream& data, std::string& includename, bool defi
   data << "#define wxMEMORY_BITMAP( name ) _wxConvertMemoryToBitmap( name, sizeof( name ) )" << std::endl;
   data << "#define wxMEMORY_BITMAPEX( name, type ) _wxConvertMemoryToBitmap( name, sizeof( name ), type )" << std::endl << std::endl;
 
-  data << "inline wxImage _wxConvertMemoryToImage(const unsigned char* data, int length, long type = wxBITMAP_TYPE_ANY )" << std::endl;
+  data << "inline wxImage _wxConvertMemoryToImage(const unsigned char* data, int length, wxBitmapType type = wxBITMAP_TYPE_ANY )" << std::endl;
   data << "{" << std::endl;
-  data << "	wxMemoryInputStream stream( data, length );" << std::endl;
-  data << "	return wxImage( stream, type, -1 );" << std::endl;
+  data << "    wxMemoryInputStream stream( data, length );" << std::endl;
+  data << "    return wxImage( stream, type, -1 );" << std::endl;
   data << "}" << std::endl << std::endl;
 
-  data << "inline wxBitmap _wxConvertMemoryToBitmap(const unsigned char* data, int length, long type = wxBITMAP_TYPE_ANY )" << std::endl;
+  data << "inline wxBitmap _wxConvertMemoryToBitmap(const unsigned char* data, int length, wxBitmapType type = wxBITMAP_TYPE_ANY )" << std::endl;
   data << "{" << std::endl;
-  data << "	wxMemoryInputStream stream( data, length );" << std::endl;
-  data << "	return wxBitmap( wxImage( stream, type, -1 ), -1 );" << std::endl;
+  data << "    wxMemoryInputStream stream( data, length );" << std::endl;
+  data << "    return wxBitmap( wxImage( stream, type, -1 ), -1 );" << std::endl;
   data << "}" << std::endl << std::endl;
 }
 
 static std::vector<std::string> list;
 
-void definefile( std::ostringstream& data, fs::ifstream& input, std::string& name, bool useconst = false )
+void definefile( std::ostringstream& data, std::ifstream& input, std::string& name, bool useconst = false )
 {
   /* Check if already defined */
   std::vector<std::string>::iterator search = std::find( list.begin(), list.end(), name );
@@ -111,18 +108,32 @@ void definefile( std::ostringstream& data, fs::ifstream& input, std::string& nam
   }
 
   /* Define array */
-  data << "static" << ( useconst ? " const " : " " ) << "unsigned char " << name << "[] = {" << std::endl;
+  data << "static" << ( useconst ? " const " : " " ) << "unsigned char " << name << "[] = {";
 
   int size = static_cast<int>(input.tellg()); // conversion from std::streamoff to int, possible loss of data
   input.seekg( 0, std::ios::beg );
 
-  int c = 0;
-  int col = 0;
+  const unsigned int col_size = 10U;
 
-  for ( int i = 1; i <= size; ++i )
+  for ( int i = 0; i < size; ++i )
   {
+    const bool is_last_char = ( i == size - 1 );
+    const bool is_first_char_in_row = ( i % col_size ) == 0U;
+    const bool is_last_char_in_row = ( i % col_size ) == ( col_size - 1 );
+
+    /* New row? */
+    if ( is_first_char_in_row )
+    {
+      data << std::endl;
+
+      if ( i < size - 1 )
+      {
+        data << "    "; /* Row's indentation */
+      }
+    }
+
     /* Get character and add to array */
-    c = input.get();
+    const int c = input.get();
 
     /*
       Using a static copy of the boost::format string gives a nice performance boost!
@@ -140,23 +151,20 @@ void definefile( std::ostringstream& data, fs::ifstream& input, std::string& nam
     snprintf( temp, 5, "0x%02X", c );
     data << temp;
 
-    if ( i >= size )
+    if ( is_last_char )
     {
       /* Last character */
       data << std::endl;
     }
+    else if ( is_last_char_in_row )
+    {
+      /* Next character is in new row */
+      data << ",";
+    }
     else
     {
-      /* Next */
+      /* Next character is in same row */
       data << ", ";
-    }
-
-    /* New colume? */
-    int curcol = ( i / 10 );
-    if ( col < curcol )
-    {
-      col = curcol;
-      data << std::endl;
     }
   }
 
@@ -173,9 +181,9 @@ int main(int argc, char* argv[])
       ( "options,p", "Show parameter information." )
       ( "version,v", "Show version information." )
       ( "quiet,q", "Quiet at runtime, not verbose." )
-      ( "input-file,i", po::value<std::vector<std::string> >(), "Define file(s) for the convertion input." )
+      ( "input-file,i", po::value<std::vector<std::string> >(), "Define file(s) for the conversion input." )
       ( "input-type,I", po::value<std::vector<std::string> >(), "Define file type(s) for automatic conversion of files in the working directory." )
-      ( "output-file,o", po::value<std::string>(), "Define file for the convertion output." )
+      ( "output-file,o", po::value<std::string>(), "Define file for the conversion output." )
       ( "noheader,h", "Disable adding of header support defines." )
       ( "const,C", "Define array as const." )
       ( "respectcase,r", "Disable converting file types into lower case." )
@@ -189,7 +197,7 @@ int main(int argc, char* argv[])
 
     po::variables_map opt;
     po::store( po::command_line_parser( argc, argv ).options( desc ).positional( posdesc ).run(), opt );
-    fs::ifstream ifs(fs::path("default.cfg"));
+    std::ifstream ifs(fs::path("default.cfg"));
     po::store( po::parse_config_file( ifs, desc ), opt );
     po::notify( opt );
 
@@ -230,7 +238,7 @@ int main(int argc, char* argv[])
         std::string headername( opt[ "output-file" ].as<std::string>() );
 
         fs::path outputpath( headername );
-        fs::ofstream output( outputpath, std::ios::out | std::ios::trunc | std::ios::binary );
+        std::ofstream output( outputpath, std::ios::out | std::ios::trunc | std::ios::binary );
 
         /* Use buffer */
         char outbuffer[BUFFER_SIZE];
@@ -240,10 +248,10 @@ int main(int argc, char* argv[])
           throw std::runtime_error( "Failed to create output file!" );
 
         if ( !opt.count( "quiet" ) ) /* Show status */
-          std::cout << "Build  : file '" << outputpath.leaf() << "'..." << std::endl;
+          std::cout << "Build  : file '" << outputpath.filename() << "'..." << std::endl;
 
         /* Get base name of file */
-        headername = fs::basename( outputpath );
+        headername = outputpath.stem().string();
 
         /* Data string stream */
         std::ostringstream data;
@@ -267,12 +275,12 @@ int main(int argc, char* argv[])
         {
           std::vector<std::string> files( opt[ "input-file" ].as<std::vector<std::string> >() );
 
-          BOOST_FOREACH( std::string& file, files )
+          for( std::string& file : files )
           {
             fs::path inputpath( file );
-            std::string fileext( fs::extension( inputpath ) );
+            std::string fileext( inputpath.extension().string() );
 
-            fs::ifstream input( inputpath, std::ios::in | std::ios::binary | std::ios::ate );
+            std::ifstream input( inputpath, std::ios::in | std::ios::binary | std::ios::ate );
             input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
 
             if ( input.is_open() )
@@ -314,17 +322,19 @@ int main(int argc, char* argv[])
         /* Process input files based on provided type */
         if ( opt.count( "input-type" ) )
         {
-          std::vector<std::string> types( opt[ "input-type" ].as<std::vector<std::string> >() );
+          const auto types( opt[ "input-type" ].as<std::vector<std::string> >() );
 
-          for ( fs::directory_iterator dir_itr( fs::initial_path() ); dir_itr != fs::directory_iterator(); ++dir_itr )
+          std::set<fs::path> sorted_img_paths{};
+
+          for ( const auto& dir_entry : fs::directory_iterator{fs::current_path()} )
           {
-            BOOST_FOREACH( std::string& type, types )
+            for( const std::string& type : types )
             {
               /* Normal file? */
-              if ( fs::is_regular( dir_itr->status() ) )
+              if ( fs::is_regular_file( dir_entry.path() ) )
               {
                 /* Wanted type? */
-                std::string fileext( fs::extension( dir_itr->path() ));
+                const std::string fileext( dir_entry.path().extension().string() );
 
                 bool equals = false;
 
@@ -335,43 +345,50 @@ int main(int argc, char* argv[])
 
                 if ( equals )
                 {
-                  fs::ifstream input( dir_itr->path(), std::ios::in | std::ios::binary | std::ios::ate );
-                  input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
-
-                  std::string file( dir_itr->path().leaf().string() );
-
-                  if ( input.is_open() )
-                  {
-                    if ( !opt.count( "quiet" ) ) /* Show status */
-                      std::cout << "Process: file '" << file << "'..." << std::endl;
-
-                    /* Remove extension */
-                    boost::erase_last( file, fileext );
-
-                    /* Append type */
-                    if ( opt.count( "appendtype" ) )
-                    {
-                      boost::erase_first( fileext, "." );
-
-                      /* Static and NO copy constructor for speed */
-                      static boost::format fmt( "%1%_%2%" );
-                      file = boost::str( fmt % file % fileext );
-                    }
-
-                    /* Lower case names when wanted */
-                    if ( !opt.count( "respectcase" ) )
-                      boost::to_lower( file );
-
-                    /* Process file */
-                    definefile( data, input, file, opt.count( "const" ) ? true : false );
-                  }
-                  else
-                  {
-                    /* Only show warning, other files need to be processed */
-                    std::cout << "Warning: input file '" << file << "' failed to open." << std::endl;
-                  }
+                  sorted_img_paths.insert(dir_entry.path());
                 }
               }
+            }
+          }
+
+          for ( const auto& img_path : sorted_img_paths )
+          {
+            std::ifstream input( img_path, std::ios::in | std::ios::binary | std::ios::ate );
+            input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
+
+            std::string file( img_path.filename().string() );
+
+            if ( input.is_open() )
+            {
+              if ( !opt.count( "quiet" ) ) /* Show status */
+                std::cout << "Process: file '" << file << "'..." << std::endl;
+
+              std::string fileext( img_path.extension().string() );
+
+              /* Remove extension */
+              boost::erase_last( file, fileext );
+
+              /* Append type */
+              if ( opt.count( "appendtype" ) )
+              {
+                boost::erase_first( fileext, "." );
+
+                /* Static and NO copy constructor for speed */
+                static boost::format fmt( "%1%_%2%" );
+                file = boost::str( fmt % file % fileext );
+              }
+
+              /* Lower case names when wanted */
+              if ( !opt.count( "respectcase" ) )
+                boost::to_lower( file );
+
+              /* Process file */
+              definefile( data, input, file, opt.count( "const" ) ? true : false );
+            }
+            else
+            {
+              /* Only show warning, other files need to be processed */
+              std::cout << "Warning: input file '" << file << "' failed to open." << std::endl;
             }
           }
         }
@@ -386,8 +403,8 @@ int main(int argc, char* argv[])
 
         if ( !opt.count( "quiet" ) ) /* Show status */
         {
-          auto nanoseconds = boost::chrono::nanoseconds(timer.elapsed().user + timer.elapsed().system);
-          auto seconds = boost::chrono::duration_cast<boost::chrono::seconds>(nanoseconds);
+          auto nanoseconds = std::chrono::nanoseconds(timer.elapsed().user + timer.elapsed().system);
+          auto seconds = std::chrono::duration_cast<std::chrono::seconds>(nanoseconds);
           std::cout << "Build  : " << seconds.count() << "s needed for conversion of " << list.size() << " files." << std::endl;
         }
       }

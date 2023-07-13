@@ -1,0 +1,93 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        export VCPKG_ROOT=$(realpath ./vcpkg)
+        echo VCPKG_ROOT=$VCPKG_ROOT
+        $VCPKG_ROOT/bootstrap-vcpkg.sh
+        vcpkg --version
+        cmake --version
+
+    - name: Build application
+      run: |
+        export VCPKG_ROOT=$(realpath ./vcpkg)
+        cmake \
+            -B build \
+            -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+        cmake --build build
+        cmake --install build --prefix /usr/local --config Release
+
+    - name: Test application
+      run: |
+        wxInclude --version
+        decompressor || true
+
+  build-macos:
+    runs-on: macos-13
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        brew install pkg-config
+        git clone https://github.com/microsoft/vcpkg.git
+        export VCPKG_ROOT=$(realpath ./vcpkg)
+        echo VCPKG_ROOT=$VCPKG_ROOT
+        $VCPKG_ROOT/bootstrap-vcpkg.sh
+        vcpkg --version
+        cmake --version
+
+    - name: Build application
+      run: |
+        export VCPKG_ROOT=$(realpath ./vcpkg)
+        cmake \
+            -B build \
+            -S . \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake
+        cmake --build build
+        cmake --install build --prefix /usr/local --config Release
+
+    - name: Test application
+      run: |
+        wxInclude --version
+        decompressor || true
+
+  build-windows:
+    runs-on: windows-2022
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        $Env:VCPKG_ROOT = Resolve-Path ./vcpkg
+        echo VCPKG_ROOT=$Env:VCPKG_ROOT
+        & "$Env:VCPKG_ROOT\bootstrap-vcpkg.bat"
+        vcpkg --version
+        cmake --version
+
+    - name: Build application
+      run: |
+        $Env:VCPKG_ROOT = Resolve-Path ./vcpkg
+        cmake `
+            -B build `
+            -S . `
+            -DCMAKE_BUILD_TYPE=Debug `
+            -DCMAKE_TOOLCHAIN_FILE="$Env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+        cmake --build build
+        cmake --install build --prefix "$Env:ProgramFiles\wxInclude" --config Debug
+
+    - name: Test application
+      run: |
+        Start-Process -FilePath $Env:ProgramFiles"\wxInclude\bin\wxInclude.exe" -ArgumentList "--version" -NoNewWindow
+        Start-Process -FilePath $Env:ProgramFiles"\wxInclude\bin\decompressor.exe" -NoNewWindow

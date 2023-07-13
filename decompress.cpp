@@ -1,21 +1,18 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-#pragma warning(push)
-// conversion from std::streamsize to int, possible loss of data
-#pragma warning(disable : 4244)
+
 #include <boost/iostreams/copy.hpp>
-#pragma warning(pop)
 #include <boost/iostreams/filter/bzip2.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
 int main(int argc, char** argv)
 {
-  namespace bfs = boost::filesystem;
+  namespace fs = std::filesystem;
   namespace bio = boost::iostreams;
-  bfs::path exepath = bfs::path(std::string(argv[0]));
+  fs::path exepath = fs::path(std::string(argv[0]));
   if (argc != 2)
   {
     std::cerr << "usage: " << exepath.filename().string() << " file.[bz2|gz|Z]" << std::endl;
@@ -23,8 +20,8 @@ int main(int argc, char** argv)
   }
   try
   {
-    bfs::path filepath = bfs::path(std::string(argv[1]));
-    if (!bfs::exists(filepath))
+    fs::path filepath = fs::path(std::string(argv[1]));
+    if (!fs::exists(filepath))
     {
       std::cerr << filepath.string() << ": doesn't exist" << std::endl;
       return 1;
