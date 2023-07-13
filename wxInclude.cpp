@@ -3,10 +3,11 @@
   Kim De Deyn
 */
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <chrono>
+#include <set>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -312,15 +313,17 @@ int main(int argc, char* argv[])
         {
           const auto types( opt[ "input-type" ].as<std::vector<std::string> >() );
 
+          std::set<fs::path> sorted_img_paths{};
+
           for ( const auto& dir_entry : fs::directory_iterator{fs::current_path()} )
           {
             for( const std::string& type : types )
             {
               /* Normal file? */
-              if ( fs::is_regular_file( dir_entry.status() ) )
+              if ( fs::is_regular_file( dir_entry.path() ) )
               {
                 /* Wanted type? */
-                std::string fileext( dir_entry.path().extension().string() );
+                const std::string fileext( dir_entry.path().extension().string() );
 
                 bool equals = false;
 
@@ -331,43 +334,50 @@ int main(int argc, char* argv[])
 
                 if ( equals )
                 {
-                  std::ifstream input( dir_entry.path(), std::ios::in | std::ios::binary | std::ios::ate );
-                  input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
-
-                  std::string file( dir_entry.path().filename().string() );
-
-                  if ( input.is_open() )
-                  {
-                    if ( !opt.count( "quiet" ) ) /* Show status */
-                      std::cout << "Process: file '" << file << "'..." << std::endl;
-
-                    /* Remove extension */
-                    boost::erase_last( file, fileext );
-
-                    /* Append type */
-                    if ( opt.count( "appendtype" ) )
-                    {
-                      boost::erase_first( fileext, "." );
-
-                      /* Static and NO copy constructor for speed */
-                      static boost::format fmt( "%1%_%2%" );
-                      file = boost::str( fmt % file % fileext );
-                    }
-
-                    /* Lower case names when wanted */
-                    if ( !opt.count( "respectcase" ) )
-                      boost::to_lower( file );
-
-                    /* Process file */
-                    definefile( data, input, file, opt.count( "const" ) ? true : false );
-                  }
-                  else
-                  {
-                    /* Only show warning, other files need to be processed */
-                    std::cout << "Warning: input file '" << file << "' failed to open." << std::endl;
-                  }
+                  sorted_img_paths.insert(dir_entry.path());
                 }
               }
+            }
+          }
+
+          for ( const auto& img_path : sorted_img_paths )
+          {
+            std::ifstream input( img_path, std::ios::in | std::ios::binary | std::ios::ate );
+            input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
+
+            std::string file( img_path.filename().string() );
+
+            if ( input.is_open() )
+            {
+              if ( !opt.count( "quiet" ) ) /* Show status */
+                std::cout << "Process: file '" << file << "'..." << std::endl;
+
+              std::string fileext( img_path.extension().string() );
+
+              /* Remove extension */
+              boost::erase_last( file, fileext );
+
+              /* Append type */
+              if ( opt.count( "appendtype" ) )
+              {
+                boost::erase_first( fileext, "." );
+
+                /* Static and NO copy constructor for speed */
+                static boost::format fmt( "%1%_%2%" );
+                file = boost::str( fmt % file % fileext );
+              }
+
+              /* Lower case names when wanted */
+              if ( !opt.count( "respectcase" ) )
+                boost::to_lower( file );
+
+              /* Process file */
+              definefile( data, input, file, opt.count( "const" ) ? true : false );
+            }
+            else
+            {
+              /* Only show warning, other files need to be processed */
+              std::cout << "Warning: input file '" << file << "' failed to open." << std::endl;
             }
           }
         }
