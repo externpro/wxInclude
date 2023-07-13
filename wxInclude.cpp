@@ -108,18 +108,32 @@ void definefile( std::ostringstream& data, std::ifstream& input, std::string& na
   }
 
   /* Define array */
-  data << "static" << ( useconst ? " const " : " " ) << "unsigned char " << name << "[] = {" << std::endl;
+  data << "static" << ( useconst ? " const " : " " ) << "unsigned char " << name << "[] = {";
 
   int size = static_cast<int>(input.tellg()); // conversion from std::streamoff to int, possible loss of data
   input.seekg( 0, std::ios::beg );
 
-  int c = 0;
-  int col = 0;
+  const unsigned int col_size = 10U;
 
-  for ( int i = 1; i <= size; ++i )
+  for ( int i = 0; i < size; ++i )
   {
+    const bool is_last_char = ( i == size - 1 );
+    const bool is_first_char_in_row = ( i % col_size ) == 0U;
+    const bool is_last_char_in_row = ( i % col_size ) == ( col_size - 1 );
+
+    /* New row? */
+    if ( is_first_char_in_row )
+    {
+      data << std::endl;
+
+      if ( i < size - 1 )
+      {
+        data << "    "; /* Row's indentation */
+      }
+    }
+
     /* Get character and add to array */
-    c = input.get();
+    const int c = input.get();
 
     /*
       Using a static copy of the boost::format string gives a nice performance boost!
@@ -137,23 +151,20 @@ void definefile( std::ostringstream& data, std::ifstream& input, std::string& na
     snprintf( temp, 5, "0x%02X", c );
     data << temp;
 
-    if ( i >= size )
+    if ( is_last_char )
     {
       /* Last character */
       data << std::endl;
     }
+    else if ( is_last_char_in_row )
+    {
+      /* Next character is in new row */
+      data << ",";
+    }
     else
     {
-      /* Next */
+      /* Next character is in same row */
       data << ", ";
-    }
-
-    /* New column? */
-    int curcol = ( i / 10 );
-    if ( col < curcol )
-    {
-      col = curcol;
-      data << std::endl;
     }
   }
 
