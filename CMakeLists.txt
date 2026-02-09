@@ -14,14 +14,14 @@ if(DEFINED XP_NAMESPACE)
     LICENSE "[wxWindows](http://wiki.wxwidgets.org/Embedding_PNG_Images 'assumed wxWindows license, since source can be downloaded from wxWiki')"
     )
   set(nameSpace NAMESPACE ${XP_NAMESPACE}::)
-elseif(NOT DEFINED XP_INSTALL_CMAKEDIR)
-  set(XP_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
+elseif(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
+  set(CMAKE_INSTALL_CMAKEDIR ${CMAKE_INSTALL_DATADIR}/cmake)
 endif()
 install(TARGETS ${CMAKE_PROJECT_NAME} EXPORT ${targetsFile}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
-install(EXPORT ${targetsFile} DESTINATION ${XP_INSTALL_CMAKEDIR} ${nameSpace})
+install(EXPORT ${targetsFile} DESTINATION ${CMAKE_INSTALL_CMAKEDIR} ${nameSpace})
 add_executable(decompressor decompress.cpp)
 target_link_libraries(decompressor PRIVATE Boost::filesystem Boost::iostreams)
