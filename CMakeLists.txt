@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 4.3)
 project(wxInclude)
 find_package(Boost)
 add_executable(${PROJECT_NAME} wxInclude.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem Boost::program_options Boost::timer)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::chrono Boost::filesystem Boost::program_options Boost::timer)
 set(targetsFile ${PROJECT_NAME}-targets)
 if(COMMAND xpExternPackage)
   xpExternPackage(TARGETS_FILE ${targetsFile}
