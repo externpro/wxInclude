@@ -240,10 +240,10 @@ int main(int argc, char* argv[])
           throw std::runtime_error( "Failed to create output file!" );
 
         if ( !opt.count( "quiet" ) ) /* Show status */
-          std::cout << "Build  : file '" << outputpath.leaf() << "'..." << std::endl;
+          std::cout << "Build  : file '" << outputpath.filename().string() << "'..." << std::endl;
 
         /* Get base name of file */
-        headername = fs::basename( outputpath );
+        headername = outputpath.stem().string();
 
         /* Data string stream */
         std::ostringstream data;
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
           BOOST_FOREACH( std::string& file, files )
           {
             fs::path inputpath( file );
-            std::string fileext( fs::extension( inputpath ) );
+            std::string fileext = inputpath.extension().string();
 
             fs::ifstream input( inputpath, std::ios::in | std::ios::binary | std::ios::ate );
             input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
@@ -321,10 +321,10 @@ int main(int argc, char* argv[])
             BOOST_FOREACH( std::string& type, types )
             {
               /* Normal file? */
-              if ( fs::is_regular( dir_itr->status() ) )
+              if ( fs::is_regular_file( dir_itr->status() ) )
               {
                 /* Wanted type? */
-                std::string fileext( fs::extension( dir_itr->path() ));
+                std::string fileext = dir_itr->path().extension().string();
 
                 bool equals = false;
 
@@ -338,7 +338,7 @@ int main(int argc, char* argv[])
                   fs::ifstream input( dir_itr->path(), std::ios::in | std::ios::binary | std::ios::ate );
                   input.rdbuf()->pubsetbuf( inbuffer, BUFFER_SIZE );
 
-                  std::string file( dir_itr->path().leaf().string() );
+                  std::string file = dir_itr->path().filename().string();
 
                   if ( input.is_open() )
                   {
