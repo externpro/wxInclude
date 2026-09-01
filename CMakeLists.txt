@@ -5,8 +5,7 @@ add_executable(${PROJECT_NAME} wxInclude.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::chrono Boost::filesystem Boost::program_options Boost::timer)
 set(targetsFile ${PROJECT_NAME}-targets)
 if(COMMAND xpExternPackage)
-  xpExternPackage(TARGETS_FILE ${targetsFile}
-    EXE ${PROJECT_NAME} FIND_XPRO_CMAKE
+  xpExternPackage(TARGETS_FILE ${targetsFile} EXE ${PROJECT_NAME}
     BASE v1.0 XPDIFF "intro"
     WEB "http://wiki.wxwidgets.org/Embedding_PNG_Images"
     DESC "embed resources into cross-platform code"
